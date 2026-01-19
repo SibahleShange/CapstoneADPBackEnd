@@ -142,6 +142,7 @@ public class ApplicantController {
                     keyFriendlyMap.getOrDefault(duplicateField, duplicateField) +
                     ". Please use a different value.";
 
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("success", false, "message", message));
 

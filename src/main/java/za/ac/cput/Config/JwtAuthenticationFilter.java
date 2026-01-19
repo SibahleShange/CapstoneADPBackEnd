@@ -29,43 +29,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // List of public endpoints that don't require authentication
     // List of public endpoints that don't require authentication
     private final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
+            // ✅ CLEANED UP: No duplicates, consistent patterns
+            // Applicant endpoints
             "/applicants/create",
             "/applicants/login",
-            "/applicants/verify-email-password-reset",  // ✅
-            "/applicants/reset-password",               // ✅
+            "/applicants/verify-email-password-reset",
+            "/applicants/reset-password",
             "/applicants/validate-token",
             "/applicants/test-token",
             "/applicants/test-public",
 
-            // ✅ ADD DOCUMENT ENDPOINTS HERE
-            "/applicant/documents/",  // ADD THIS
-            "/applicant/documents/",  // ADD THIS
-
+            // Admin endpoints
             "/admins/create",
             "/admins/login",
-            "/admins/verify-email-password-reset",      // ✅
-            "/admins/reset-password",                   // ✅
+            "/admins/verify-email-password-reset",
+            "/admins/reset-password",
             "/admins/validate-token",
             "/admins/test-token",
-            "/auth/",
+
+            // Document endpoints (FIXED: removed duplicates)
+            "/applicant/documents/",
+
+            // Capstone prefixed endpoints
             "/capstone/applicants/create",
             "/capstone/applicants/login",
-            "/capstone/applicants/verify-email-password-reset",  // ✅
-            "/capstone/applicants/reset-password",               // ✅
+            "/capstone/applicants/verify-email-password-reset",
+            "/capstone/applicants/reset-password",
             "/capstone/applicants/validate-token",
             "/capstone/applicants/test-token",
             "/capstone/applicants/test-public",
-            // ✅ ADD DOCUMENT ENDPOINTS HERE
-            "/capstone/applicant/documents/",  // ADD THIS
-            "/capstone/applicant/documents/",  // ADD THIS
+
             "/capstone/admins/create",
             "/capstone/admins/login",
-            "/capstone/admins/verify-email-password-reset",      // ✅
-            "/capstone/admins/reset-password",                   // ✅
+            "/capstone/admins/verify-email-password-reset",
+            "/capstone/admins/reset-password",
             "/capstone/admins/validate-token",
-            "/capstone/admins/test-token"
-    );
+            "/capstone/admins/test-token",
 
+            // Auth endpoint
+            "/auth/"
+    );
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

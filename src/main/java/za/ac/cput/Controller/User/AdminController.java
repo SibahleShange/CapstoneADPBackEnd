@@ -49,23 +49,73 @@ public class AdminController {
     }
 
     // Create a new admin (public - no token required)
+// Create a new admin (public - no token required)
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody Admin admin) {
-        if (admin.getContact() == null || admin.getContact().getEmail() == null) {
-            return new ResponseEntity<>("Email is required", HttpStatus.BAD_REQUEST);
+        try {
+            // --- Basic validations ---
+            if (admin.getContact() == null || admin.getContact().getEmail() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("success", false, "message", "Email is required"));
+            }
+
+            String email = admin.getContact().getEmail();
+
+            // Admins must use admin email domain
+            if (!email.endsWith("@admin.co.za")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("success", false, "message", "Admins must use @admin.co.za email domain"));
+            }
+
+            // --- Create the admin ---
+            Admin created = adminService.create(admin);
+
+            // ✅ RETURN CONSISTENT SUCCESS RESPONSE
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                            "success", true,
+                            "message", "Admin registered successfully",
+                            "data", created
+                    ));
+
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            // --- Handle duplicate key errors dynamically ---
+            String dbMessage = ex.getMostSpecificCause().getMessage();
+            String duplicateField = "unknown field";
+
+            // Extract the DB key from the message
+            int keyIndex = dbMessage.indexOf("for key '");
+            if (keyIndex != -1) {
+                String keyPart = dbMessage.substring(keyIndex + 9); // skip "for key '"
+                int endIndex = keyPart.indexOf("'");
+                if (endIndex != -1) {
+                    duplicateField = keyPart.substring(0, endIndex);
+                    // Remove table name prefix if present
+                    if (duplicateField.contains(".")) {
+                        duplicateField = duplicateField.substring(duplicateField.indexOf(".") + 1);
+                    }
+                }
+            }
+
+            // Map DB key names to friendly column names
+            Map<String, String> keyFriendlyMap = Map.of(
+                    "UK893geq5bxk3o6gh642gh6cyic", "ID number",
+                    "UKgnqwbwwcn7x0m5jlt4158dass", "Email",
+                    "UKcf0gmg94pw4y0ic2m7vg09kv2", "Cellphone"
+            );
+
+            String message = "Duplicate entry for " +
+                    keyFriendlyMap.getOrDefault(duplicateField, duplicateField) +
+                    ". Please use a different value.";
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", message));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error creating admin: " + e.getMessage()));
         }
-
-        String email = admin.getContact().getEmail();
-
-        // Admins must use admin email domain
-        if (!email.endsWith("@admin.co.za")) {
-            return new ResponseEntity<>("Admins must use @admin.co.za email domain", HttpStatus.BAD_REQUEST);
-        }
-
-        Admin created = adminService.create(admin);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-
     // Read an admin by ID (protected - ADMIN only)
     @GetMapping("/read/{id}")
     @PreAuthorize("hasRole('ADMIN')")
